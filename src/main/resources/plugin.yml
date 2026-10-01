@@ -1,0 +1,39 @@
+name: gayjumptest
+version: '${version}'
+
+main: net.noname18_.gayjumptest.Gayjumptest
+
+api-version: '1.21.3'
+load: POSTWORLD
+
+commands:
+  smite:
+    description: kills shit
+  rank:
+    description: Set's a player's rank.
+  mute:
+    description: Mute a player.
+  unmute:
+    description: Unmute a player.
+  kick:
+    description: Kick a player.
+  ban:
+    description: Bans a player.
+  unban:
+    description: Unbans a player.
+  oj:
+    description: One jump commands.
+
+
+permissions:
+  rank.set:
+    description: Allows players to set other people's ranks.
+    default: op
+  mute.use:
+    description: Allows players to mute rule breakers.
+  kick.use:
+    description: Allows players to kick rule breakers.
+  ban.use:
+    description: Allows players to ban rule breakers.
+  unban.use:
+    description: Allows players to unban other players.

@@ -1,0 +1,331 @@
+package net.noname18_.gayjumptest;
+
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerLoginEvent;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class Punishments implements Listener {
+
+    private final Map<UUID, Long> mutedplayers = new HashMap<>();
+    private final Map<UUID, Long> bannedplayers = new HashMap<>();
+
+    private final Gayjumptest plugin;
+    private final File file;
+    private final org.bukkit.configuration.file.FileConfiguration data;
+
+    public Punishments(Gayjumptest plugin) {
+        this.plugin = plugin;
+
+        if (!plugin.getDataFolder().exists()) {
+            plugin.getDataFolder().mkdirs();
+        }
+
+        file = new File(plugin.getDataFolder(), "punishments.yml");
+        data = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(file);
+
+        loadData();
+    }
+
+    public void saveData() {
+        data.set("mutedplayers", null);
+        data.set("bannedplayers", null);
+
+        for (Map.Entry<UUID, Long> entry : mutedplayers.entrySet()) {
+            data.set(
+                    "mutedplayers." + entry.getKey(),
+                    entry.getValue()
+            );
+        }
+
+        for (Map.Entry<UUID, Long> entry : bannedplayers.entrySet()) {
+            data.set(
+                    "bannedplayers." + entry.getKey(),
+                    entry.getValue()
+            );
+        }
+
+        try {
+            data.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Could not save punishments.yml!");
+            e.printStackTrace();
+        }
+    }
+
+    public void loadData() {
+        if (data.getConfigurationSection("mutedplayers") != null) {
+            for (String uuidString : data.getConfigurationSection("mutedplayers").getKeys(false)) {
+                try {
+                    UUID uuid = UUID.fromString(uuidString);
+                    long expiration = data.getLong(
+                            "mutedplayers." + uuidString
+                    );
+
+                    if (expiration > System.currentTimeMillis()) {
+                        mutedplayers.put(uuid, expiration);
+                    }
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
+
+        if (data.getConfigurationSection("bannedplayers") != null) {
+            for (String uuidString : data.getConfigurationSection("bannedplayers").getKeys(false)) {
+                try {
+                    UUID uuid = UUID.fromString(uuidString);
+                    long expiration = data.getLong(
+                            "bannedplayers." + uuidString
+                    );
+
+                    if (expiration > System.currentTimeMillis()) {
+                        bannedplayers.put(uuid, expiration);
+                    }
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
+
+        saveData();
+    }
+
+    public void kick(Player player, String reason) {
+        Component kickReason = Component.text(
+                String.format(
+                        "§8§l[§c§lPUNISHMENTS§8§l]\n§cYou have been kicked!\n \n§cReason: §4%s",
+                        reason
+                )
+        );
+
+        player.kick(kickReason);
+
+        Bukkit.broadcastMessage(
+                String.format(
+                        "§8§l[§c§lPUNISHMENTS§8§l] §4%s §chas been kicked for §4%s§c!",
+                        player.getName(),
+                        reason
+                )
+        );
+    }
+
+    private long parseDuration(String duration) {
+        if (duration.endsWith("s")) {
+            String amount = duration.substring(0, duration.length() - 1);
+            long actualDuration = Integer.valueOf(amount);
+            return actualDuration * 1000L;
+        } else if (duration.endsWith("h")) {
+            String amount = duration.substring(0, duration.length() - 1);
+            long actualDuration = Integer.valueOf(amount);
+            return actualDuration * 3600000L;
+        } else if (duration.endsWith("d")) {
+            String amount = duration.substring(0, duration.length() - 1);
+            long actualDuration = Integer.valueOf(amount);
+            return actualDuration * 86400000L;
+        } else if (duration.endsWith("w")) {
+            String amount = duration.substring(0, duration.length() - 1);
+            long actualDuration = Integer.valueOf(amount);
+            return actualDuration * 604800000L;
+        } else if (duration.endsWith("mo")) {
+            String amount = duration.substring(0, duration.length() - 2);
+            long actualDuration = Integer.valueOf(amount);
+            return actualDuration * 2592000000L;
+        } else if (duration.endsWith("m")) {
+            String amount = duration.substring(0, duration.length() - 1);
+            long actualDuration = Integer.valueOf(amount);
+            return actualDuration * 60000L;
+        } else {
+            throw new IllegalArgumentException(
+                    "§8§l[§c§lPUNISHMENTS§8§l]Invalid duration: " + duration
+            );
+        }
+    }
+
+    public void mute(OfflinePlayer player, String duration, String reason) {
+        long expiration = System.currentTimeMillis() + parseDuration(duration);
+
+        mutedplayers.put(
+                player.getUniqueId(),
+                expiration
+        );
+
+        for (Player plyer : Bukkit.getOnlinePlayers()) {
+            plyer.playSound(
+                    plyer,
+                    Sound.ENTITY_WITHER_SPAWN,
+                    100,
+                    1
+            );
+        }
+
+        Bukkit.broadcastMessage(
+                String.format(
+                        "§8§l[§c§lPUNISHMENTS§8§l] §4%s §chas been muted for §4%s §cfor §4%s",
+                        player.getName(),
+                        duration,
+                        reason
+                )
+        );
+
+        saveData();
+    }
+
+    public void unmute(OfflinePlayer player) {
+        mutedplayers.remove(player.getUniqueId());
+
+        Bukkit.broadcastMessage(
+                String.format(
+                        "§8§l[§c§lPUNISHMENTS§8§l] §a%s has been unmuted!",
+                        player.getName()
+                )
+        );
+
+        saveData();
+    }
+
+    public long ismuted(OfflinePlayer player) {
+        UUID uuid = player.getUniqueId();
+
+        Long expiration = mutedplayers.get(uuid);
+
+        if (expiration == null) {
+            return 0L;
+        }
+
+        if (expiration <= System.currentTimeMillis()) {
+            mutedplayers.remove(uuid);
+            saveData();
+            return 0L;
+        }
+
+        return expiration;
+    }
+
+    public void ban(OfflinePlayer player, String duration, String reason) {
+        long actualDuration = parseDuration(duration);
+        long expiration = System.currentTimeMillis() + actualDuration;
+
+        bannedplayers.put(
+                player.getUniqueId(),
+                expiration
+        );
+
+        for (Player plyer : Bukkit.getOnlinePlayers()) {
+            plyer.playSound(
+                    plyer,
+                    Sound.ENTITY_ENDER_DRAGON_DEATH,
+                    100,
+                    1
+            );
+        }
+
+        Bukkit.broadcastMessage(
+                String.format(
+                        "§8§l[§c§lPUNISHMENTS§8§l] §4%s §chas been banned for §4%s §cfor §4%s",
+                        player.getName(),
+                        duration,
+                        reason
+                )
+        );
+
+        player.ban(
+                reason,
+                Duration.ofMillis(actualDuration),
+                null
+        );
+
+        saveData();
+    }
+
+    public void unban(OfflinePlayer player) {
+        bannedplayers.remove(player.getUniqueId());
+
+        Bukkit.broadcastMessage(
+                String.format(
+                        "§8§l[§c§lPUNISHMENTS§8§l] §a%s has been unbanned!",
+                        player.getName()
+                )
+        );
+
+        saveData();
+    }
+
+    @EventHandler
+    public void onLogin(PlayerLoginEvent event) {
+        UUID uuid = event.getPlayer().getUniqueId();
+
+        Long expiration = bannedplayers.get(uuid);
+
+        if (expiration == null) {
+            return;
+        }
+
+        long timeLeft = expiration - System.currentTimeMillis();
+
+        if (timeLeft <= 0) {
+            bannedplayers.remove(uuid);
+            saveData();
+            return;
+        }
+
+        event.disallow(
+                PlayerLoginEvent.Result.KICK_BANNED,
+                "§8§l[§c§lPUNISHMENTS§8§l]\n \n" +
+                        "§cYou are §4banned§c!\n \n" +
+                        "Time left: " + formatDurations(timeLeft)
+        );
+    }
+
+    public String formatDurations(long duration) {
+        long seconds = (duration / 1000) % 60;
+        long minutes = (duration / 60000) % 60;
+        long hours = (duration / 3600000) % 24;
+        long days = (duration / 86400000) % 7;
+        long weeks = (duration / 604800000) % 4;
+        long months = duration / 2592000000L;
+
+        StringBuilder result = new StringBuilder();
+
+        if (months > 0) {
+            result.append(months).append(" months ");
+        }
+
+        if (weeks > 0) {
+            result.append(weeks).append(" weeks ");
+        }
+
+        if (days > 0) {
+            result.append(days).append(" days ");
+        }
+
+        if (hours > 0) {
+            result.append(hours).append(" hours ");
+        }
+
+        if (minutes > 0 && seconds > 0) {
+            result.append(minutes).append(" minutes and ");
+        } else if (minutes > 0) {
+            result.append(minutes).append(" minutes.");
+        }
+
+        if (seconds > 0) {
+            result.append(seconds).append(" seconds.");
+        }
+
+        if (result.length() == 0) {
+            result.append("0 seconds.");
+        }
+
+        return result.toString();
+    }
+}
