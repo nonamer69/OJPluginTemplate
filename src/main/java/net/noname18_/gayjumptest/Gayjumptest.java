@@ -3,6 +3,7 @@ package net.noname18_.gayjumptest;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Sound;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -286,10 +287,8 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                     sender.sendMessage("§cInvalid jump number! Correct usage: /oj finish <jumpNumber>");
                     return true;
                 } else {
-                    sender.sendMessage(String.format("§aSuccessfully added a finish plate to Jump %s!", args[1]));
-
                     Location location = player.getLocation();
-                    onejump.finishCreate(location, Integer.valueOf(args[1]));
+                    onejump.finishCreate(location, Integer.valueOf(args[1]), player);
                 }
             } else if (args[0].equalsIgnoreCase("warp")) {
                 if (!(sender instanceof Player player)) {
@@ -321,6 +320,124 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 player.teleport(location);
                 player.sendMessage("§aWarped to Jump " + jumpNo + "!");
                 return true;
+            } else if (args[0].equalsIgnoreCase("complete")) {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("§cOnly players can use this command!");
+                    return true;
+                }
+
+                if (args.length != 3) {
+                    player.sendMessage("§cInvalid arguments! Usage: /oj complete <player>");
+                    return true;
+                }
+
+                int jumpNo;
+
+                try {
+                    jumpNo = Integer.parseInt(args[2]);
+                } catch (NumberFormatException e) {
+                    player.sendMessage("§cJump number must be a number!");
+                    return true;
+                }
+
+                if (jumpNo < 1 || jumpNo > onejump.jump - 1) {
+                    player.sendMessage("§cInvalid jump!");
+                    return true;
+                }
+
+                OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(args[1]);
+
+                Set<Integer> completed = onejump.completed.get(targetPlayer.getUniqueId());
+                if (completed == null) {
+                    player.sendMessage("§cInvalid player!");
+                    return true;
+                }
+
+                if (completed.contains(jumpNo)) {
+                    player.sendMessage("§cThis player has already completed this jump!");
+                    return true;
+                }
+
+
+                player.sendMessage(String.format("§aSuccessfully completed Jump %s for %s!", String.valueOf(jumpNo), targetPlayer.getName()));
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 100, 1);
+                completed.add(jumpNo);
+                onejump.completed.put(targetPlayer.getUniqueId(), completed);
+                onejump.recalculateOjp(targetPlayer.getUniqueId());
+                if (targetPlayer.isOnline()) {
+                    Player onlinePlayer = Bukkit.getPlayer(Objects.requireNonNull(targetPlayer.getPlayer()).getUniqueId());
+                    onlinePlayer.playSound(onlinePlayer.getLocation(), Sound.ITEM_TOTEM_USE, 100, 0);
+                    onlinePlayer.sendMessage(String.format("§aCompleted Jump %s!", String.valueOf(jumpNo)));
+
+                    ranks.tablogic(onlinePlayer);
+                }
+
+            } else if (args[0].equalsIgnoreCase("uncomplete")) {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("§cOnly players can use this command!");
+                    return true;
+                }
+
+                if (!sender.hasPermission("rank.set")) {
+                    sender.sendMessage("§cYou have no permission to do that!");
+                    return true;
+                }
+
+                if (args.length != 3) {
+                    player.sendMessage("§cInvalid arguments! Usage: /oj uncomplete <player>");
+                    return true;
+                }
+
+                int jumpNo;
+
+                try {
+                    jumpNo = Integer.parseInt(args[2]);
+                } catch (NumberFormatException e) {
+                    player.sendMessage("§cJump number must be a number!");
+                    return true;
+                }
+
+                if (jumpNo < 1 || jumpNo > onejump.jump - 1) {
+                    player.sendMessage("§cInvalid jump!");
+                    return true;
+                }
+
+                OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(args[1]);
+
+                Set<Integer> completed = onejump.completed.get(targetPlayer.getUniqueId());
+                if (completed == null) {
+                    player.sendMessage("§cInvalid player!");
+                    return true;
+                }
+
+                if (!completed.contains(jumpNo)) {
+                    player.sendMessage("§cThis player hasn't completed this jump!");
+                    return true;
+                }
+
+                player.sendMessage(String.format("§aSuccessfully uncompleted Jump %s for %s!", String.valueOf(jumpNo), targetPlayer.getName()));
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 100, 1);
+                completed.remove(jumpNo);
+                onejump.completed.put(targetPlayer.getUniqueId(), completed);
+                onejump.recalculateOjp(targetPlayer.getUniqueId());
+                if (targetPlayer.isOnline()) {
+                    Player onlinePlayer = Bukkit.getPlayer(Objects.requireNonNull(targetPlayer.getPlayer()).getUniqueId());
+
+                    ranks.tablogic(onlinePlayer);
+                }
+            } else if (args[0].equalsIgnoreCase("reload")) {
+                for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+                    onejump.recalculateOjp(offlinePlayer.getUniqueId());
+                    if (offlinePlayer.isOnline()) {
+                        Player onlinePlayer = offlinePlayer.getPlayer();
+                        if (onlinePlayer == null) {
+                            continue;
+                        }
+                        ranks.tablogic(onlinePlayer);
+                        onlinePlayer.sendMessage(String.format("§aSuccessfully recalculated ojp! Your new total is: §b%s", onejump.ojp.get(onlinePlayer.getUniqueId())));
+                    }
+                }
+
             }
         }
         return true;

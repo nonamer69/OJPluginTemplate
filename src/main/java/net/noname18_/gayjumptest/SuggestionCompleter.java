@@ -3,6 +3,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class SuggestionCompleter implements TabCompleter {
         switch (command.getName().toLowerCase()) {
             case "oj" -> {
                 if (args.length == 1) {
-                    suggestions.addAll(List.of("create", "delete", "checkpoint", "finish", "warp"));
+                    suggestions.addAll(List.of("create", "delete", "checkpoint", "finish", "warp", "complete", "uncomplete"));
                 } else if (args.length == 2 && args[0].equalsIgnoreCase("delete")) {
                     suggestions.addAll(List.of("all"));
                     for (Integer jumpNumber : onejump.jumpNames.keySet()) {
@@ -34,6 +35,22 @@ public class SuggestionCompleter implements TabCompleter {
                         suggestions.add(String.valueOf(jumpNumber));
                     }
                 } else if (args.length == 2 && args[0].equalsIgnoreCase("warp")) {
+                    for (Integer jumpNumber : onejump.jumpNames.keySet()) {
+                        suggestions.add(String.valueOf(jumpNumber));
+                    }
+                } else if (args.length == 2 && args[0].equalsIgnoreCase("complete")) {
+                    for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                        suggestions.add(onlinePlayer.getName());
+                    }
+                } else if (args.length == 2 && args[0].equalsIgnoreCase("uncomplete")) {
+                    for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                        suggestions.add(onlinePlayer.getName());
+                    }
+                } else if (args.length == 3 & args[0].equalsIgnoreCase("complete")) {
+                    for (Integer jumpNumber : onejump.jumpNames.keySet()) {
+                        suggestions.add(String.valueOf(jumpNumber));
+                    }
+                } else if (args.length == 3 & args[0].equalsIgnoreCase("uncomplete")) {
                     for (Integer jumpNumber : onejump.jumpNames.keySet()) {
                         suggestions.add(String.valueOf(jumpNumber));
                     }

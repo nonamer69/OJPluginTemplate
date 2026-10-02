@@ -17,6 +17,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -614,6 +615,63 @@ public class OneJump implements Listener {
         saveData();
     }
 
+    public void recalculateOjp(UUID uuid) {
+        Set<Integer> completedJumps = completed.get(uuid);
+
+        if (completedJumps == null) {
+            ojp.put(uuid, 0);
+            return;
+        }
+
+        int points = 0;
+
+        for (int completedJump : completedJumps) {
+            String difficulty = jumpDifficulties.get(completedJump);
+
+            if (difficulty == null) {
+                continue;
+            }
+
+            int actualDifficulty;
+
+            if (difficulty.endsWith("+") || difficulty.endsWith("-")) {
+                actualDifficulty = Integer.parseInt(
+                        difficulty.substring(0, difficulty.length() - 1)
+                );
+            } else {
+                actualDifficulty = Integer.parseInt(difficulty);
+            }
+
+            if (actualDifficulty == 1) {
+                points += 1;
+            } else if (actualDifficulty == 2) {
+                points += 2;
+            } else if (actualDifficulty == 3) {
+                points += 4;
+            } else if (actualDifficulty == 4) {
+                points += 5;
+            } else if (actualDifficulty == 5) {
+                points += 6;
+            } else if (actualDifficulty == 6) {
+                points += 8;
+            } else if (actualDifficulty == 7) {
+                points += 13;
+            } else if (actualDifficulty == 8) {
+                points += 19;
+            } else if (actualDifficulty == 9) {
+                points += 23;
+            } else if (actualDifficulty == 10) {
+                points += 26;
+            } else if (actualDifficulty == 11) {
+                points += 54;
+            } else if (actualDifficulty == 12) {
+                points += 121;
+            }
+        }
+
+        ojp.put(uuid, points);
+    }
+
     public void create(Player player, String diff, String nam) {
         String difficulty = diff;
         String name = nam;
@@ -691,68 +749,45 @@ public class OneJump implements Listener {
             int points = 0;
 
             for (int completedJump : entry.getValue()) {
-                String difficulty = jumpDifficulties.get(completedJump);
+                recalculateOjp(uuid);
 
-                if (difficulty == null) {
-                    continue;
+                Player player = Bukkit.getPlayer(uuid);
+
+                if (player != null && ranks != null) {
+                    ranks.tablogic(player);
                 }
-
-                int actualDifficulty;
-
-                if (difficulty.endsWith("+") || difficulty.endsWith("-")) {
-                    actualDifficulty = Integer.parseInt(
-                            difficulty.substring(0, difficulty.length() - 1)
-                    );
-                } else {
-                    actualDifficulty = Integer.parseInt(difficulty);
-                }
-
-                if (actualDifficulty == 1) {
-                    points += 1;
-                } else if (actualDifficulty == 2) {
-                    points += 2;
-                } else if (actualDifficulty == 3) {
-                    points += 4;
-                } else if (actualDifficulty == 4) {
-                    points += 5;
-                } else if (actualDifficulty == 5) {
-                    points += 6;
-                } else if (actualDifficulty == 6) {
-                    points += 8;
-                } else if (actualDifficulty == 7) {
-                    points += 13;
-                } else if (actualDifficulty == 8) {
-                    points += 19;
-                } else if (actualDifficulty == 9) {
-                    points += 23;
-                } else if (actualDifficulty == 10) {
-                    points += 26;
-                } else if (actualDifficulty == 11) {
-                    points += 54;
-                } else if (actualDifficulty == 12) {
-                    points += 121;
-                }
-            }
-
-            ojp.put(uuid, points);
-
-            Player player = Bukkit.getPlayer(uuid);
-
-            if (player != null && ranks != null) {
-                ranks.tablogic(player);
-            }
         }
 
         jump--;
 
         saveData();
+        }
     }
 
-    public void finishCreate(Location location, int jumpNo) {
+    public void finishCreate(Location location, int jumpNo, Player player) {
         Location plate = location.getBlock().getLocation();
 
-        plate.getBlock().setType(Material.LIGHT_WEIGHTED_PRESSURE_PLATE);
-        completionPlates.put(plate, jumpNo);
+        player.sendMessage("§eWarning! Countdown has initiated. Please step off the block where the plate will be, otherwise you'll get an autocompletion which is punishable.");
+
+        new BukkitRunnable() {
+            int seconds = 5;
+
+            @Override
+            public void run() {
+                if (seconds <= 0) {
+                    cancel();
+                    plate.getBlock().setType(Material.LIGHT_WEIGHTED_PRESSURE_PLATE);
+                    completionPlates.put(plate, jumpNo);
+                    player.sendMessage(String.format("§aSuccessfully added a finish plate to Jump %s!", jumpNo));
+
+                    saveData();
+                    return;
+                }
+
+                player.sendMessage("§a" + seconds);
+                seconds--;
+            }
+        }.runTaskTimer(plugin, 20L, 20L);
 
         saveData();
     }
