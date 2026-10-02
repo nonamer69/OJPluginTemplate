@@ -13,7 +13,7 @@ Hello! This tutorial should teach you how to use the plugin.
      2.1 /oj create difficulty0-12(-/+) name
      PERMISSIONS: rank.set, belongs to admin+ only
      
-       - this command essentially creates the jumps. the jump warp gets created at the location you were standing on while executing the command. the difficulty must be between 0 and 12 and you may add         a + or - to the end to further specify the difficulty. created jumps are automatically added to the menu(to access it, right click the nether star in your inventory)
+       - this command essentially creates the jumps. the jump warp gets created at the location you were standing on while executing the command. the difficulty must be between 0 and 12 and you may add         a + or - at the end to further specify the difficulty. created jumps are automatically added to the menu(to access it, right click the nether star in your inventory)
          
      2.2 /oj delete jumpNumber
      PERMISSIONS: rank.set, belongs to admin+ only
