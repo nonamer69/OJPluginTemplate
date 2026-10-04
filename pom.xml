@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.noname18_</groupId>
-    <artifactId>gayjumptest</artifactId>
+    <artifactId>OJTemplatePlugin</artifactId>
     <version>v1.2.0</version>
     <packaging>jar</packaging>
 
