@@ -4,10 +4,10 @@ My first ever plugin and finished project in java! Kinda scuffed I know. I don't
 
 Hello! This tutorial should teach you how to use the plugin.
 
-1. checkpoints
+1) checkpoints
    - the blaze rod in your inventory teleports you to a set checkpoint, while the echo shard sets that checkpoint. another way a checkpoint can be set is via checkpoint plates. refer to 2.3 for more info
    
-2. /oj
+2) /oj
    - this command is separated into multiple subcommands, i'll list what each one does.
      
      2.1 /oj create difficulty0-12(-/+) name
@@ -61,43 +61,43 @@ Hello! This tutorial should teach you how to use the plugin.
 
        - teleports the player to the jump specified
 
-   3. /rank player rank
+   3) /rank player rank
       
       PERMISSIONS: rank.set, belongs to admin+ only
    
       - sets the specified player's rank. Rank list: member, jrmod, mod, admin, owner
    
-   4. /mute player duration(s/m/h/d/w/mo) reason
+   4) /mute player duration(s/m/h/d/w/mo) reason
       
       PERMISSIONS: mute.use, belongs to jrmod+ only
    
       - mutes the player for a certain amount of time
      
-   5. /unmute player
+   5) /unmute player
       
       PERMISSIONS: unmute.use, belongs to jrmod+ only
    
       - unmutes the player specified
      
-   6. /kick player reason
+   6) /kick player reason
        
       PERMISSIONS: kick.use, belongs to jrmod+ only
    
       - kicks the player specified for the reason provided
      
-   7. /ban player duration(s/m/h/d/w/mo) reason
+   7) /ban player duration(s/m/h/d/w/mo) reason
        
       PERMISSIONS: ban.use, belongs to mod+ only
    
       - bans the player specified for the provided duration and reason
      
-   8. /unban player
+   8) /unban player
        
       PERMISSIONS: unban.use, belongs to mod+ only
    
       - unbans the player specified
   
-   9. /stats player(optional argument)
+   9) /stats player(optional argument)
 
       PERMISSIONS: all members can use this command
    
