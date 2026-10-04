@@ -1,21 +1,21 @@
 package net.noname18_.gayjumptest;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public final class Gayjumptest extends JavaPlugin implements Listener {
     public final Set<UUID> nukeConf = new HashSet<>();
@@ -25,6 +25,7 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
     private OneJump onejump;
     private SuggestionCompleter suggestionCompleter;
     private UseItem useitem;
+    private Stats stats;
 
     @Override
     public void onEnable() {
@@ -34,6 +35,7 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
         ranks = new Ranks(this, onejump);
         suggestionCompleter = new SuggestionCompleter(onejump);
         useitem = new UseItem(onejump);
+        stats = new Stats(onejump);
 
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new GIveItemsJoin(), this);
@@ -42,6 +44,7 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(new ChatPrefixes(ranks, punishments, onejump, this, useitem), this);
         getServer().getPluginManager().registerEvents(punishments, this);
         getServer().getPluginManager().registerEvents(onejump, this);
+        getServer().getPluginManager().registerEvents(stats, this);
 
         onejump.setRanks(ranks);
 
@@ -439,8 +442,66 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 }
 
             }
+        } else if (command.getName().equalsIgnoreCase("stats")) {
+            if (args.length > 1) {
+                sender.sendMessage("§cInvalid arguments! Usage: /stats <player(optional argument)>");
+                return true;
+            }
+
+            OfflinePlayer targetPlayer = null;
+            Player player = ((Player) sender).getPlayer();
+
+            if (player == null) {
+                sender.sendMessage("§cInvalid player!");
+                return true;
+            }
+
+            if (args.length == 1) {
+                targetPlayer = Bukkit.getOfflinePlayer(args[0]);
+            } else {
+                targetPlayer = ((Player) sender).getPlayer();
+            }
+
+            assert targetPlayer != null;
+
+            Inventory menu = Bukkit.createInventory(player, 9, targetPlayer.getName() + "'s stats");
+
+            ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+            SkullMeta meta = (SkullMeta) head.getItemMeta();
+            int ojp = stats.getPlayerOjp(targetPlayer);
+            meta.setOwningPlayer(targetPlayer);
+            meta.setDisplayName("§eOneJump points");
+            meta.setLore(List.of("§8━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "§ePoints§7: §6" + ojp, "§8━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
+
+            head.setItemMeta(meta);
+            menu.setItem(3, head);
+
+            ItemStack jumpsCompletedBook = new ItemStack(Material.WRITABLE_BOOK);
+
+            int jumpsCompleted = 0;
+            Set<Integer> completed = onejump.completed.get(targetPlayer.getUniqueId());
+
+            if (completed != null) {
+                jumpsCompleted = completed.size();
+            }
+
+            int allJumps = onejump.jumpNames.size();
+
+            ItemMeta bookMeta = jumpsCompletedBook.getItemMeta();
+            bookMeta.setDisplayName("§6§lTotal jumps completed: §8(§f" + jumpsCompleted + "§7/§f" + allJumps + "§8)");
+            jumpsCompletedBook.setItemMeta(bookMeta);
+
+            menu.setItem(5, jumpsCompletedBook);
+            player.openInventory(menu);
         }
         return true;
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getView().getTitle().equals(event.getWhoClicked().getName() + "'s stats")) {
+            event.setCancelled(true);
+        }
     }
 
     @Override

@@ -23,6 +23,9 @@ commands:
     description: Unbans a player.
   oj:
     description: One jump commands.
+  stats:
+    description: Opens the player's onejump stats.
+    aliases: [s, profile, p]
 
 
 permissions:

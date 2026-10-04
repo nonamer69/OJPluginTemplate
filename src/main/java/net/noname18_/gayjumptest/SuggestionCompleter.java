@@ -76,6 +76,12 @@ public class SuggestionCompleter implements TabCompleter {
                     suggestions.addAll(List.of("member", "jrmod", "mod", "admin", "owner"));
                 }
             }
+
+            case "stats" -> {
+                if (args.length == 1) {
+                    Bukkit.getOnlinePlayers().forEach(player -> suggestions.add(player.getName()));
+                }
+            }
         }
 
         String current = args[args.length - 1].toLowerCase();
