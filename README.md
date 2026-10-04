@@ -96,6 +96,12 @@ Hello! This tutorial should teach you how to use the plugin.
       PERMISSIONS: unban.use, belongs to mod+ only
    
       - unbans the player specified
+  
+   12. /stats player(optional argument)
+
+      PERMISSIONS: all members can use this command
+   
+      - lets you check the stats of another player(Jumps completed and OneJump points as of now)
      
    -------------------------------------------------------------------------------
    
