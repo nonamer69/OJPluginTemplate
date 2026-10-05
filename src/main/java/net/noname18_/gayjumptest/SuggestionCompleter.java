@@ -24,7 +24,7 @@ public class SuggestionCompleter implements TabCompleter {
         switch (command.getName().toLowerCase()) {
             case "oj" -> {
                 if (args.length == 1) {
-                    suggestions.addAll(List.of("create", "delete", "checkpoint", "finish", "warp", "complete", "uncomplete"));
+                    suggestions.addAll(List.of("create", "delete", "checkpoint", "finish", "warp", "complete", "uncomplete", "reload"));
                 } else if (args.length == 2 && args[0].equalsIgnoreCase("delete")) {
                     suggestions.addAll(List.of("all"));
                     for (Integer jumpNumber : onejump.jumpNames.keySet()) {

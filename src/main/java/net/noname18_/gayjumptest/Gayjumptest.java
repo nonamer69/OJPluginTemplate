@@ -489,6 +489,64 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
 
             ItemMeta bookMeta = jumpsCompletedBook.getItemMeta();
             bookMeta.setDisplayName("§6§lTotal jumps completed: §8(§f" + jumpsCompleted + "§7/§f" + allJumps + "§8)");
+            List<String> difficultyLore = new ArrayList<>();
+
+            for (int difficulty = 0; difficulty <= 12; difficulty++) {
+                int completedCount = 0;
+                int totalCount = 0;
+
+                String[] difficultyColors = {
+                        "§f",
+                        "§b",
+                        "§9",
+                        "§a",
+                        "§e",
+                        "§6",
+                        "§4",
+                        "§d",
+                        "§5",
+                        "§8",
+                        "§0",
+                        "§5",
+                        "§7"
+                };
+
+                for (Map.Entry<Integer, String> entry : onejump.jumpDifficulties.entrySet()) {
+                    String jumpDifficulty = entry.getValue();
+
+                    if (jumpDifficulty == null) {
+                        continue;
+                    }
+
+                    if (jumpDifficulty.endsWith("+") || jumpDifficulty.endsWith("-")) {
+                        jumpDifficulty = jumpDifficulty.substring(0, jumpDifficulty.length() - 1);
+                    }
+
+                    if (!jumpDifficulty.equals(String.valueOf(difficulty))) {
+                        continue;
+                    }
+
+                    totalCount++;
+
+                    if (completed != null && completed.contains(entry.getKey())) {
+                        completedCount++;
+                    }
+                }
+
+                String color = difficultyColors[difficulty];
+
+                difficultyLore.add(
+                        "§fDifficulty " + color + difficulty + "§7: §f" + completedCount + "/" + totalCount
+                );
+            }
+
+            List<String> lore = new ArrayList<>();
+            lore.add("§8━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            lore.addAll(difficultyLore);
+            lore.add("§8━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+            meta.setLore(lore);
+
             jumpsCompletedBook.setItemMeta(bookMeta);
 
             menu.setItem(5, jumpsCompletedBook);

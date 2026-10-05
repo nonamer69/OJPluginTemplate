@@ -746,22 +746,19 @@ public class OneJump implements Listener {
 
         for (Map.Entry<UUID, Set<Integer>> entry : completed.entrySet()) {
             UUID uuid = entry.getKey();
-            int points = 0;
 
-            for (int completedJump : entry.getValue()) {
-                recalculateOjp(uuid);
+            recalculateOjp(uuid);
 
-                Player player = Bukkit.getPlayer(uuid);
+            Player player = Bukkit.getPlayer(uuid);
 
-                if (player != null && ranks != null) {
-                    ranks.tablogic(player);
-                }
+            if (player != null && ranks != null) {
+                ranks.tablogic(player);
+            }
         }
 
         jump--;
 
         saveData();
-        }
     }
 
     public void finishCreate(Location location, int jumpNo, Player player) {
