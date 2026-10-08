@@ -67,11 +67,11 @@ Hello! This tutorial should teach you how to use the plugin.
    
       - sets the specified player's rank. Rank list: member, jrmod, mod, admin, owner
    
-4) /mute player duration(s/m/h/d/w/mo) reason
+4) /mute player
       
       PERMISSIONS: mute.use, belongs to jrmod+ only
    
-      - mutes the player for a certain amount of time
+      - opens a gui that is used to mute a player
      
 5) /unmute player
       
@@ -85,11 +85,11 @@ Hello! This tutorial should teach you how to use the plugin.
    
       - kicks the player specified for the reason provided
      
-7) /ban player duration(s/m/h/d/w/mo) reason
+7) /ban player
        
       PERMISSIONS: ban.use, belongs to mod+ only
    
-      - bans the player specified for the provided duration and reason
+      - opens a gui that is used to ban a player
      
 8) /unban player
        
