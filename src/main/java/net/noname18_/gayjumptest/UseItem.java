@@ -194,7 +194,7 @@ public class UseItem implements Listener {
 
             teleportPlayer(coordinates, event.getPlayer());
         } else if (item.getType() == Material.ECHO_SHARD) {
-            checkpoints.put(event.getPlayer(), event.getPlayer().getLocation());
+            onejump.playerCheckpoints.put(event.getPlayer(), event.getPlayer().getLocation());
             event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 200, 1);
             CommandSender sender = event.getPlayer();
             sender.sendMessage("§7§l[§b§lO§3§lJ§7§l] §bSet §3checkpoint§b§7!");

@@ -62,8 +62,6 @@ public class SuggestionCompleter implements TabCompleter {
                     Bukkit.getOnlinePlayers().forEach(
                             player -> suggestions.add(player.getName())
                     );
-                } else if (args.length == 2) {
-                    suggestions.addAll(List.of("1s", "2m", "3h", "4d", "5w", "6mo"));
                 }
             }
 

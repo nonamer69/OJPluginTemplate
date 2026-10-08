@@ -2,6 +2,7 @@ package net.noname18_.gayjumptest;
 
 import org.bukkit.*;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,6 +16,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 public final class Gayjumptest extends JavaPlugin implements Listener {
@@ -26,6 +28,12 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
     private SuggestionCompleter suggestionCompleter;
     private UseItem useitem;
     private Stats stats;
+
+    private OfflinePlayer targetPlyr;
+
+    Map<Player, Integer> durationIndexes = new HashMap<>();
+
+    Map<Player, ArrayList<OfflinePlayer>> punishmentData = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -55,6 +63,8 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
         getCommand("ban").setTabCompleter(suggestionCompleter);
         getCommand("unban").setTabCompleter(suggestionCompleter);
         getCommand("rank").setTabCompleter(suggestionCompleter);
+
+
     }
 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
@@ -108,16 +118,95 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cYou have no permission to use this!");
                 return true;
             }
-            if (args.length < 3) {
-                sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cInvalid arguments! Usage: /mute <player> <duration(s/m/h/d/w/mo)> <reason>");
+            if (args.length != 1) {
+                sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cInvalid arguments! Usage: /mute <player>");
                 return true;
             }
             OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
-            if (target == null) {
-                sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cInvalid player! Usage: /mute <player> <duration(s/m/h/d/w/mo)> <reason>");
-                return true;
+
+            if (!(sender instanceof Player player)) {
+                return false;
             }
-            punishments.mute(target, args[1], args[2]);
+
+            Inventory mutemenu = Bukkit.createInventory(player, 45, "Mute " + target.getName());
+
+            ItemStack borderPane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+            ItemMeta meta = borderPane.getItemMeta();
+            meta.setDisplayName(" ");
+            borderPane.setItemMeta(meta);
+
+            int rows = 5;
+            int columns = 9;
+
+            for (int slot = 0; slot < rows * columns; slot++) {
+                int row = slot / columns;
+                int column = slot % columns;
+
+                if (row == 0 || row == rows - 1 || column == 0 || column == columns - 1) {
+                    mutemenu.setItem(slot, borderPane);
+                }
+            }
+
+            String[] reasons = {
+                    "Spamming",
+                    "Inappropriate Behavior",
+                    "Racism / Hate speech",
+                    "Advertising",
+                    "Insufferable",
+                    "Toxicity"
+            };
+
+            int[] slots = {
+                    10, 11, 12, 13, 14, 15, 16,
+                    19, 20, 21, 22, 23, 24, 25,
+                    28, 29, 30, 31, 32, 33, 34
+            };
+
+            String[] durations = {
+                    "10 seconds",
+                    "30 seconds",
+                    "1 minute",
+                    "5 minutes",
+                    "10 minutes",
+                    "30 minutes",
+                    "1 hour",
+                    "5 hours",
+                    "1 day",
+                    "5 days",
+                    "1 week",
+                    "2 weeks",
+                    "3 weeks",
+                    "1 month",
+                    "3 months",
+                    "6 months",
+                    "12 months",
+                    "24 months"
+            };
+
+            for (int i = 0; i < reasons.length; i++) {
+                ItemStack item = new ItemStack(Material.PAPER);
+                ItemMeta itemMeta = item.getItemMeta();
+
+                itemMeta.setDisplayName("§c" + reasons[i]);
+                itemMeta.setLore(List.of(
+                        "§7Left click to punish",
+                        "§7Right click to cycle duration",
+                        "",
+                        "§7Duration: §c" + durations[0]
+                ));
+
+                item.setItemMeta(itemMeta);
+                mutemenu.setItem(slots[i], item);
+            }
+
+            targetPlyr = target;
+            player.openInventory(mutemenu);
+
+            ArrayList<OfflinePlayer> data = new ArrayList<>();
+            data.add(target);
+            punishmentData.put(player, data);
+
+            //punishments.mute(target, args[1], args[2]);
         } else if (command.getName().equalsIgnoreCase("unmute")) {
             if (!sender.hasPermission("mute.use")) {
                 sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cYou have no permission to use this!");
@@ -130,6 +219,10 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
             OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
             if (target == null) {
                 sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cInvalid player! /unmute <player>");
+                return true;
+            }
+            if (punishments.ismuted(target) <= 0) {
+                sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cThis player is not muted!");
                 return true;
             }
             punishments.unmute(target);
@@ -153,16 +246,95 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cYou have no permission to use this!");
                 return true;
             }
-            if (args.length < 3) {
-                sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cInvalid arguments! /ban <player> <duration(s/m/h/d/w/mo)> <reason>");
+
+            if (args.length != 1) {
+                sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cInvalid arguments! Usage: /ban <player>");
                 return true;
             }
+
             OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
-            if (target == null) {
-                sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cInvalid player! /ban <player> <duration(s/m/h/d/w/mo)> <reason>");
-                return true;
+
+            if (!(sender instanceof Player player)) {
+                return false;
             }
-            punishments.ban(target, args[1], args[2]);
+
+            Inventory banmenu = Bukkit.createInventory(player, 45, "Ban " + target.getName());
+
+            ItemStack borderPane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+            ItemMeta meta = borderPane.getItemMeta();
+            meta.setDisplayName(" ");
+            borderPane.setItemMeta(meta);
+
+            int rows = 5;
+            int columns = 9;
+
+            for (int slot = 0; slot < rows * columns; slot++) {
+                int row = slot / columns;
+                int column = slot % columns;
+
+                if (row == 0 || row == rows - 1 || column == 0 || column == columns - 1) {
+                    banmenu.setItem(slot, borderPane);
+                }
+            }
+
+            String[] reasons = {
+                    "Cheating / Unfair advantages",
+                    "Harassment(Extreme)",
+                    "Racism / Hate speech(Extreme)",
+                    "Advertising(Extreme)",
+                    "Misleading staff(Extreme)",
+                    "Inappropriate Behavior(Extreme)"
+            };
+
+            int[] slots = {
+                    10, 11, 12, 13, 14, 15, 16,
+                    19, 20, 21, 22, 23, 24, 25,
+                    28, 29, 30, 31, 32, 33, 34
+            };
+
+            String[] durations = {
+                    "10 seconds",
+                    "30 seconds",
+                    "1 minute",
+                    "5 minutes",
+                    "10 minutes",
+                    "30 minutes",
+                    "1 hour",
+                    "5 hours",
+                    "1 day",
+                    "5 days",
+                    "1 week",
+                    "2 weeks",
+                    "3 weeks",
+                    "1 month",
+                    "3 months",
+                    "6 months",
+                    "12 months",
+                    "24 months"
+            };
+
+            for (int i = 0; i < reasons.length; i++) {
+                ItemStack item = new ItemStack(Material.NETHERITE_INGOT);
+                ItemMeta itemMeta = item.getItemMeta();
+
+                itemMeta.setDisplayName("§c" + reasons[i]);
+                itemMeta.setLore(List.of(
+                        "§7Left click to punish",
+                        "§7Right click to cycle duration",
+                        "",
+                        "§7Duration: §c" + durations[0]
+                ));
+
+                item.setItemMeta(itemMeta);
+                banmenu.setItem(slots[i], item);
+            }
+
+            targetPlyr = target;
+            player.openInventory(banmenu);
+
+            ArrayList<OfflinePlayer> data = new ArrayList<>();
+            data.add(target);
+            punishmentData.put(player, data);
 
         } else if (command.getName().equalsIgnoreCase("unban")) {
             if (!sender.hasPermission("unban.use")) {
@@ -173,11 +345,13 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cInvalid arguments! /unban <player>");
                 return true;
             }
+
             OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
             if (target == null) {
                 sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cInvalid player! /unban <player>");
                 return true;
             }
+
             punishments.unban(target);
         } else if (command.getName().equalsIgnoreCase("oj")) {
             if (args[0].equalsIgnoreCase("create")) {
@@ -560,6 +734,126 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
         if (event.getView().getTitle().equals(event.getWhoClicked().getName() + "'s stats")) {
             event.setCancelled(true);
         }
+
+        if (event.getView().getTitle().contains("Mute") || event.getView().getTitle().contains("Ban")) {
+            event.setCancelled(true);
+
+            Player player = (Player) event.getWhoClicked();
+            int slot = event.getRawSlot();
+
+            String[] reasons = {
+                    "Spamming",
+                    "Inappropriate Behavior",
+                    "Racism / Hate speech",
+                    "Advertising",
+                    "Insufferable",
+                    "Toxicity"
+            };
+
+            int[] slots = {
+                    10, 11, 12, 13, 14, 15, 16,
+                    19, 20, 21, 22, 23, 24, 25,
+                    28, 29, 30, 31, 32, 33, 34
+            };
+
+            String[] durations = {
+                    "10 seconds",
+                    "30 seconds",
+                    "1 minute",
+                    "5 minutes",
+                    "10 minutes",
+                    "30 minutes",
+                    "1 hour",
+                    "5 hours",
+                    "1 day",
+                    "5 days",
+                    "1 week",
+                    "2 weeks",
+                    "3 weeks",
+                    "1 month",
+                    "3 months",
+                    "6 months",
+                    "12 months",
+                    "24 months"
+            };
+
+            ArrayList<OfflinePlayer> data = punishmentData.get(player);
+
+            if (data == null) {
+                return;
+            }
+
+            OfflinePlayer target = data.get(0);
+
+            for (int i = 0; i < slots.length; i++) {
+                if (slot == slots[i]) {
+                    if (event.getClick().isRightClick()) {
+
+                        int index = durationIndexes.getOrDefault(player, 0);
+
+                        index++;
+
+                        if (index >= durations.length) {
+                            index = 0;
+                        }
+
+                        durationIndexes.put(player, index);
+
+                        String duration = durations[index];
+
+                        ItemStack item = event.getView().getTopInventory().getItem(slot);
+
+                        if (item != null && item.hasItemMeta()) {
+                            ItemMeta meta = item.getItemMeta();
+
+                            meta.setLore(List.of(
+                                    "§7Left click to punish",
+                                    "§7Right click to cycle duration",
+                                    "",
+                                    "§7Duration: §c" + duration
+                            ));
+
+                            item.setItemMeta(meta);
+                        }
+
+                        return;
+                    }
+
+                    if (event.getClick().isLeftClick()) {
+
+                        int index = durationIndexes.getOrDefault(player, 0);
+                        String duration = durations[index];
+
+                        if (event.getView().getTitle().contains("Mute")) {
+
+                            punishments.mute(
+                                    target,
+                                    duration,
+                                    reasons[i]
+                            );
+
+                        } else if (event.getView().getTitle().contains("Ban")) {
+
+                            punishments.ban(
+                                    target,
+                                    duration,
+                                    reasons[i]
+                            );
+                        }
+
+                        durationIndexes.remove(player);
+                        punishmentData.remove(player);
+
+                        event.getView().close();
+
+                        return;
+                    }
+
+                    break;
+                }
+            }
+        }
+
     }
 
     @Override

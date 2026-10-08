@@ -120,33 +120,34 @@ public class Punishments implements Listener {
     }
 
     private long parseDuration(String duration) {
-        if (duration.endsWith("s")) {
-            String amount = duration.substring(0, duration.length() - 1);
-            long actualDuration = Integer.valueOf(amount);
-            return actualDuration * 1000L;
-        } else if (duration.endsWith("h")) {
-            String amount = duration.substring(0, duration.length() - 1);
-            long actualDuration = Integer.valueOf(amount);
-            return actualDuration * 3600000L;
-        } else if (duration.endsWith("d")) {
-            String amount = duration.substring(0, duration.length() - 1);
-            long actualDuration = Integer.valueOf(amount);
-            return actualDuration * 86400000L;
-        } else if (duration.endsWith("w")) {
-            String amount = duration.substring(0, duration.length() - 1);
-            long actualDuration = Integer.valueOf(amount);
-            return actualDuration * 604800000L;
-        } else if (duration.endsWith("mo")) {
-            String amount = duration.substring(0, duration.length() - 2);
-            long actualDuration = Integer.valueOf(amount);
-            return actualDuration * 2592000000L;
-        } else if (duration.endsWith("m")) {
-            String amount = duration.substring(0, duration.length() - 1);
-            long actualDuration = Integer.valueOf(amount);
-            return actualDuration * 60000L;
+        duration = duration.toLowerCase().trim();
+
+        if (duration.endsWith(" seconds") || duration.endsWith(" second")) {
+            String amount = duration.split(" ")[0];
+            return Long.parseLong(amount) * 1000L;
+
+        } else if (duration.endsWith(" minutes") || duration.endsWith(" minute")) {
+            String amount = duration.split(" ")[0];
+            return Long.parseLong(amount) * 60000L;
+
+        } else if (duration.endsWith(" hours") || duration.endsWith(" hour")) {
+            String amount = duration.split(" ")[0];
+            return Long.parseLong(amount) * 3600000L;
+
+        } else if (duration.endsWith(" days") || duration.endsWith(" day")) {
+            String amount = duration.split(" ")[0];
+            return Long.parseLong(amount) * 86400000L;
+
+        } else if (duration.endsWith(" weeks") || duration.endsWith(" week")) {
+            String amount = duration.split(" ")[0];
+            return Long.parseLong(amount) * 604800000L;
+
+        } else if (duration.endsWith(" months") || duration.endsWith(" month")) {
+            String amount = duration.split(" ")[0];
+            return Long.parseLong(amount) * 2592000000L;
         } else {
             throw new IllegalArgumentException(
-                    "§8§l[§c§lPUNISHMENTS§8§l]Invalid duration: " + duration
+                    "§8§l[§c§lPUNISHMENTS§8§l] Invalid duration: " + duration
             );
         }
     }
