@@ -1,5 +1,7 @@
 package net.noname18_.gayjumptest;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.*;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Item;
@@ -77,19 +79,19 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
         } else if (command.getName().equalsIgnoreCase("rank")) {
 
             if (!sender.hasPermission("rank.set") || !sender.hasPermission("op")) {
-                sender.sendMessage("§cYou have no permission to do that!");
+                sender.sendMessage("§8§l[§c§l!§8§l] §cYou have no permission to do that!");
                 return true;
             }
 
             if (args.length < 2) {
-                sender.sendMessage("§cInvalid arguments! Usage: /rank <player> <rank>");
+                sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid arguments! Usage: /rank <player> <rank>");
                 return true;
             }
 
             Player target = Bukkit.getPlayer(args[0]);
 
             if (target == null) {
-                sender.sendMessage("§cInvalid player! Usage: /rank <player> <rank>");
+                sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid player! Usage: /rank <player> <rank>");
                 return true;
             }
 
@@ -98,7 +100,7 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
             try {
                 rank = Ranks.Rank.valueOf(args[1].toUpperCase());
             } catch (IllegalArgumentException e) {
-                sender.sendMessage("§cInvalid rank! Usage: /rank <player> <rank>");
+                sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid rank! Usage: /rank <player> <rank>");
                 return true;
             }
 
@@ -352,16 +354,21 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 return true;
             }
 
+            if (punishments.isBanned(target) <= 0) {
+                sender.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cThis player is not banned!");
+                return true;
+            }
+
             punishments.unban(target);
         } else if (command.getName().equalsIgnoreCase("oj")) {
             if (args[0].equalsIgnoreCase("create")) {
                 if (!sender.hasPermission("rank.set")) {
-                    sender.sendMessage("§cYou have no permission to do that!");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cYou have no permission to do that!");
                     return true;
                 }
 
                 if (args.length != 3) {
-                    sender.sendMessage("§cInvalid arguments!");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid arguments!");
                     return true;
                 }
 
@@ -371,28 +378,27 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 if (args[1].endsWith("+") || args[1].endsWith("-")) {
                     String difficulti = args[1].substring(0, args[1].length() - 1);
                     if (0 > Integer.valueOf(difficulti) || Integer.valueOf(difficulti) > 12) {
-                        sender.sendMessage("§cInvalid difficulty! Choose one from 0-12. You may add a + or - at the end to further specify it!");
+                        sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid difficulty! Choose one from 0-12. You may add a + or - at the end to further specify it!");
                         return false;
                     }
                 } else {
                     int difficulti = Integer.valueOf(args[1]);
                     if (0 > difficulti || difficulti > 12) {
-                        sender.sendMessage("§cInvalid difficulty! Choose one from 0-12. You may add a + or - at the end to further specify it!");
+                        sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid difficulty! Choose one from 0-12. You may add a + or - at the end to further specify it!");
                         return false;
                     }
                 }
-                sender.sendMessage(String.format("§aSuccessfully created Jump %s!", String.valueOf(onejump.jump)));
+                sender.sendMessage(String.format("§7§l[§b§lO§3§lJ§7§l] §aSuccessfully created Jump %s!", String.valueOf(onejump.jump)));
                 onejump.create(player, args[1], args[2]);
 
             } else if (args[0].equalsIgnoreCase("delete")) {
                 if (!sender.hasPermission("rank.set")) {
-                    sender.sendMessage("§cYou have no permission to do that!");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cYou have no permission to do that!");
                     return true;
                 }
 
                 if (args.length != 2) {
-                    sender.sendMessage("§cInvalid arguments!");
-                    sender.sendMessage(args.length + " arg");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid arguments!");
                     return true;
                 }
 
@@ -401,37 +407,37 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 }
 
                 if (!sender.hasPermission("op")) {
-                    sender.sendMessage("§cYou have no permission to do that!");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cYou have no permission to do that!");
                     return true;
                 } else {
                     if (args[1].equalsIgnoreCase("all")) {
-                        sender.sendMessage("§c§lWARNING! This command will delete EVERY jump, resulting in the death and inevitable doom of the server. If you wish to proceed, type this phrase in chat: \n \n§cYes, I agree to NUKE the entire server and make it a barren wasteland nobody will visit anymore.");
+                        sender.sendMessage("§7§l[§b§lO§3§lJ§7§l] §c§lWARNING! This command will delete EVERY jump, resulting in the death and inevitable doom of the server. If you wish to proceed, type this phrase in chat: \n \n§cYes, I agree to NUKE the entire server and make it a barren wasteland nobody will visit anymore.");
                         nukeConf.add(player.getUniqueId());
                         return true;
                     }
                 }
 
                 if (Integer.parseInt(args[1]) < 1 || Integer.parseInt(args[1]) > onejump.jump) {
-                    sender.sendMessage("§cInvalid jump number! Correct usage: /oj delete <jumpNumber>");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid jump number! Correct usage: /oj delete <jumpNumber>");
                     return true;
                 } else {
                     if (!onejump.jumpNames.containsKey(Integer.valueOf(args[1]))) {
-                        sender.sendMessage("§cThat jump does not exist! Perhaps try creating it via /oj create <difficulty> <name>?");
+                        sender.sendMessage("§8§l[§c§l!§8§l] §cThat jump does not exist! Perhaps try creating it via /oj create <difficulty> <name>?");
                         return true;
                     }
-                    sender.sendMessage(String.format("§aSuccessfully deleted Jump %s!", args[1]));
+                    sender.sendMessage(String.format("§7§l[§b§lO§3§lJ§7§l] §aSuccessfully deleted Jump %s!", args[1]));
                     onejump.delete(Integer.valueOf(args[1]));
                     return true;
                 }
 
             } else if (args[0].equalsIgnoreCase("checkpoint")) {
                 if (!sender.hasPermission("rank.set")) {
-                    sender.sendMessage("§cYou have no permission to do that!");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cYou have no permission to do that!");
                     return true;
                 }
 
                 if (args.length != 1) {
-                    sender.sendMessage("§cInvalid arguments! Usage: /oj checkpoint");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid arguments! Usage: /oj checkpoint");
                     return true;
                 }
 
@@ -442,15 +448,15 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 }
 
                 onejump.checkpointCreate(player);
-                sender.sendMessage("§aSuccessfully created a checkpoint at your location!");
+                sender.sendMessage("§7§l[§b§lO§3§lJ§7§l] §aSuccessfully created a checkpoint at your location!");
             } else if (args[0].equalsIgnoreCase("finish")) {
                 if (!sender.hasPermission("rank.set")) {
-                    sender.sendMessage("§cYou have no permission to do that!");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cYou have no permission to do that!");
                     return true;
                 }
 
                 if (args.length != 2) {
-                    sender.sendMessage("§cInvalid arguments! Usage: /oj finish <jumpNumber>");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid arguments! Usage: /oj finish <jumpNumber>");
                     return true;
                 }
 
@@ -461,7 +467,7 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 }
 
                 if (Integer.parseInt(args[1]) < 1 || Integer.parseInt(args[1]) > onejump.jump - 1) {
-                    sender.sendMessage("§cInvalid jump number! Correct usage: /oj finish <jumpNumber>");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid jump number! Correct usage: /oj finish <jumpNumber>");
                     return true;
                 } else {
                     Location location = player.getLocation();
@@ -469,12 +475,12 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 }
             } else if (args[0].equalsIgnoreCase("warp")) {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage("§cOnly players can use this command!");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cOnly players can use this command!");
                     return true;
                 }
 
                 if (args.length != 2) {
-                    player.sendMessage("§cInvalid arguments! Usage: /oj warp <jumpNumber>");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cInvalid arguments! Usage: /oj warp <jumpNumber>");
                     return true;
                 }
 
@@ -483,28 +489,29 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 try {
                     jumpNo = Integer.parseInt(args[1]);
                 } catch (NumberFormatException e) {
-                    player.sendMessage("§cJump number must be a number!");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cJump number must be a number!");
                     return true;
                 }
 
                 Location location = onejump.jumpLocations.get(jumpNo);
 
                 if (location == null) {
-                    player.sendMessage("§cThat jump does not exist!");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cThat jump does not exist!");
                     return true;
                 }
 
                 player.teleport(location);
-                player.sendMessage("§aWarped to Jump " + jumpNo + "!");
+                player.sendMessage("§7§l[§b§lO§3§lJ§7§l] §aWarped to Jump " + jumpNo + "!");
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_TELEPORT, 100, 1);
                 return true;
             } else if (args[0].equalsIgnoreCase("complete")) {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage("§cOnly players can use this command!");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cOnly players can use this command!");
                     return true;
                 }
 
                 if (args.length != 3) {
-                    player.sendMessage("§cInvalid arguments! Usage: /oj complete <player>");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cInvalid arguments! Usage: /oj complete <player>");
                     return true;
                 }
 
@@ -513,12 +520,12 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 try {
                     jumpNo = Integer.parseInt(args[2]);
                 } catch (NumberFormatException e) {
-                    player.sendMessage("§cJump number must be a number!");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cJump number must be a number!");
                     return true;
                 }
 
                 if (jumpNo < 1 || jumpNo > onejump.jump - 1) {
-                    player.sendMessage("§cInvalid jump!");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cInvalid jump!");
                     return true;
                 }
 
@@ -526,17 +533,17 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
 
                 Set<Integer> completed = onejump.completed.get(targetPlayer.getUniqueId());
                 if (completed == null) {
-                    player.sendMessage("§cInvalid player!");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cInvalid player!");
                     return true;
                 }
 
                 if (completed.contains(jumpNo)) {
-                    player.sendMessage("§cThis player has already completed this jump!");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cThis player has already completed this jump!");
                     return true;
                 }
 
 
-                player.sendMessage(String.format("§aSuccessfully completed Jump %s for %s!", String.valueOf(jumpNo), targetPlayer.getName()));
+                player.sendMessage(String.format("§7§l[§b§lO§3§lJ§7§l] §aSuccessfully completed Jump %s for %s!", String.valueOf(jumpNo), targetPlayer.getName()));
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 100, 1);
                 completed.add(jumpNo);
                 onejump.completed.put(targetPlayer.getUniqueId(), completed);
@@ -544,24 +551,24 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 if (targetPlayer.isOnline()) {
                     Player onlinePlayer = Bukkit.getPlayer(Objects.requireNonNull(targetPlayer.getPlayer()).getUniqueId());
                     onlinePlayer.playSound(onlinePlayer.getLocation(), Sound.ITEM_TOTEM_USE, 100, 0);
-                    onlinePlayer.sendMessage(String.format("§aCompleted Jump %s!", String.valueOf(jumpNo)));
+                    onlinePlayer.sendMessage(String.format("§7§l[§b§lO§3§lJ§7§l] §aCompleted Jump %s!", String.valueOf(jumpNo)));
 
                     ranks.tablogic(onlinePlayer);
                 }
 
             } else if (args[0].equalsIgnoreCase("uncomplete")) {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage("§cOnly players can use this command!");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cOnly players can use this command!");
                     return true;
                 }
 
                 if (!sender.hasPermission("rank.set")) {
-                    sender.sendMessage("§cYou have no permission to do that!");
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cYou have no permission to do that!");
                     return true;
                 }
 
                 if (args.length != 3) {
-                    player.sendMessage("§cInvalid arguments! Usage: /oj uncomplete <player>");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cInvalid arguments! Usage: /oj uncomplete <player>");
                     return true;
                 }
 
@@ -570,12 +577,12 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 try {
                     jumpNo = Integer.parseInt(args[2]);
                 } catch (NumberFormatException e) {
-                    player.sendMessage("§cJump number must be a number!");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cJump number must be a number!");
                     return true;
                 }
 
                 if (jumpNo < 1 || jumpNo > onejump.jump - 1) {
-                    player.sendMessage("§cInvalid jump!");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cInvalid jump!");
                     return true;
                 }
 
@@ -583,16 +590,16 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
 
                 Set<Integer> completed = onejump.completed.get(targetPlayer.getUniqueId());
                 if (completed == null) {
-                    player.sendMessage("§cInvalid player!");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cInvalid player!");
                     return true;
                 }
 
                 if (!completed.contains(jumpNo)) {
-                    player.sendMessage("§cThis player hasn't completed this jump!");
+                    player.sendMessage("§8§l[§c§l!§8§l] §cThis player hasn't completed this jump!");
                     return true;
                 }
 
-                player.sendMessage(String.format("§aSuccessfully uncompleted Jump %s for %s!", String.valueOf(jumpNo), targetPlayer.getName()));
+                player.sendMessage(String.format("§7§l[§b§lO§3§lJ§7§l] §aSuccessfully uncompleted Jump %s for %s!", String.valueOf(jumpNo), targetPlayer.getName()));
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 100, 1);
                 completed.remove(jumpNo);
                 onejump.completed.put(targetPlayer.getUniqueId(), completed);
@@ -603,6 +610,11 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                     ranks.tablogic(onlinePlayer);
                 }
             } else if (args[0].equalsIgnoreCase("reload")) {
+                if (!sender.hasPermission("rank.set")) {
+                    sender.sendMessage("§8§l[§c§l!§8§l] §cYou have no permission to do that!");
+                    return true;
+                }
+
                 for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
                     onejump.recalculateOjp(offlinePlayer.getUniqueId());
                     if (offlinePlayer.isOnline()) {
@@ -611,14 +623,14 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                             continue;
                         }
                         ranks.tablogic(onlinePlayer);
-                        onlinePlayer.sendMessage(String.format("§aSuccessfully recalculated ojp! Your new total is: §b%s", onejump.ojp.get(onlinePlayer.getUniqueId())));
+                        onlinePlayer.sendMessage(String.format("§7§l[§b§lO§3§lJ§7§l] §aSuccessfully recalculated ojp! Your new total is: §b%s", onejump.ojp.get(onlinePlayer.getUniqueId())));
                     }
                 }
 
             }
         } else if (command.getName().equalsIgnoreCase("stats")) {
             if (args.length > 1) {
-                sender.sendMessage("§cInvalid arguments! Usage: /stats <player(optional argument)>");
+                sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid arguments! Usage: /stats <player(optional argument)>");
                 return true;
             }
 
@@ -626,7 +638,7 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
             Player player = ((Player) sender).getPlayer();
 
             if (player == null) {
-                sender.sendMessage("§cInvalid player!");
+                sender.sendMessage("§8§l[§c§l!§8§l] §cInvalid player!");
                 return true;
             }
 
@@ -750,6 +762,15 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                     "Toxicity"
             };
 
+            String[] banReasons = {
+                    "Cheating / Unfair advantages",
+                    "Harassment(Extreme)",
+                    "Racism / Hate speech(Extreme)",
+                    "Advertising(Extreme)",
+                    "Misleading staff(Extreme)",
+                    "Inappropriate Behavior(Extreme)"
+            };
+
             int[] slots = {
                     10, 11, 12, 13, 14, 15, 16,
                     19, 20, 21, 22, 23, 24, 25,
@@ -831,29 +852,32 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                                     duration,
                                     reasons[i]
                             );
-
+                            event.getView().close();
                         } else if (event.getView().getTitle().contains("Ban")) {
+                            String message = (
+                                    "§8§l[§c§lPUNISHMENTS§8§l]\n\n" +
+                                            "§cYou are §4banned§c!\n\n" +
+                                            "§cReason: §4" + banReasons[i] +
+                                            "\n§cTime left: §4" + punishments.formatDurations(
+                                            punishments.parseDuration(duration)
+                                    )
+                            );
 
                             punishments.ban(
                                     target,
                                     duration,
-                                    reasons[i]
+                                    banReasons[i],
+                                    message
                             );
+                            event.getView().close();
+                            return;
                         }
 
-                        durationIndexes.remove(player);
-                        punishmentData.remove(player);
-
-                        event.getView().close();
-
-                        return;
+                        break;
                     }
-
-                    break;
                 }
             }
         }
-
     }
 
     @Override

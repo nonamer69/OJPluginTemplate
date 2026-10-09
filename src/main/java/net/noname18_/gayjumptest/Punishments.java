@@ -1,6 +1,7 @@
 package net.noname18_.gayjumptest;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
@@ -18,8 +19,8 @@ import java.util.UUID;
 
 public class Punishments implements Listener {
 
-    private final Map<UUID, Long> mutedplayers = new HashMap<>();
-    private final Map<UUID, Long> bannedplayers = new HashMap<>();
+    public final Map<UUID, Long> mutedplayers = new HashMap<>();
+    public final Map<UUID, Long> bannedplayers = new HashMap<>();
 
     private final Gayjumptest plugin;
     private final File file;
@@ -119,7 +120,7 @@ public class Punishments implements Listener {
         );
     }
 
-    private long parseDuration(String duration) {
+    public long parseDuration(String duration) {
         duration = duration.toLowerCase().trim();
 
         if (duration.endsWith(" seconds") || duration.endsWith(" second")) {
@@ -212,7 +213,25 @@ public class Punishments implements Listener {
         return expiration;
     }
 
-    public void ban(OfflinePlayer player, String duration, String reason) {
+    public long isBanned(OfflinePlayer player) {
+        UUID uuid = player.getUniqueId();
+
+        Long expiration = bannedplayers.get(uuid);
+
+        if (expiration == null) {
+            return 0L;
+        }
+
+        if (expiration <= System.currentTimeMillis()) {
+            bannedplayers.remove(uuid);
+            saveData();
+            return 0L;
+        }
+
+        return expiration;
+    }
+
+    public void ban(OfflinePlayer player, String duration, String reason, String broadcastMsg) {
         long actualDuration = parseDuration(duration);
         long expiration = System.currentTimeMillis() + actualDuration;
 
@@ -240,7 +259,7 @@ public class Punishments implements Listener {
         );
 
         player.ban(
-                reason,
+                broadcastMsg,
                 Duration.ofMillis(actualDuration),
                 null
         );
@@ -279,12 +298,13 @@ public class Punishments implements Listener {
             return;
         }
 
-        event.disallow(
-                PlayerLoginEvent.Result.KICK_BANNED,
-                "§8§l[§c§lPUNISHMENTS§8§l]\n \n" +
-                        "§cYou are §4banned§c!\n \n" +
-                        "Time left: " + formatDurations(timeLeft)
+        Component message = LegacyComponentSerializer.legacySection().deserialize(
+                "§8§l[§c§lPUNISHMENTS§8§l]\n\n" +
+                        "§cYou are §4banned§c!\n\n" +
+                        "§cTime left: §4" + formatDurations(timeLeft)
         );
+
+        event.disallow(PlayerLoginEvent.Result.KICK_BANNED, message);
     }
 
     public String formatDurations(long duration) {

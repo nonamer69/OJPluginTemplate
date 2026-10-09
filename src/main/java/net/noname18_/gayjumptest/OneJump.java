@@ -764,7 +764,7 @@ public class OneJump implements Listener {
     public void finishCreate(Location location, int jumpNo, Player player) {
         Location plate = location.getBlock().getLocation();
 
-        player.sendMessage("§eWarning! Countdown has initiated. Please step off the block where the plate will be, otherwise you'll get an autocompletion which is punishable.");
+        player.sendMessage("§7§l[§b§lO§3§lJ§7§l] §eWarning! Countdown has initiated. Please step off the block where the plate will be, otherwise you'll get an autocompletion which is punishable.");
 
         new BukkitRunnable() {
             int seconds = 5;
@@ -775,7 +775,7 @@ public class OneJump implements Listener {
                     cancel();
                     plate.getBlock().setType(Material.LIGHT_WEIGHTED_PRESSURE_PLATE);
                     completionPlates.put(plate, jumpNo);
-                    player.sendMessage(String.format("§aSuccessfully added a finish plate to Jump %s!", jumpNo));
+                    player.sendMessage(String.format("§7§l[§b§lO§3§lJ§7§l] §aSuccessfully added a finish plate to Jump %s!", jumpNo));
 
                     saveData();
                     return;
@@ -884,7 +884,7 @@ public class OneJump implements Listener {
             player.closeInventory();
 
             player.sendMessage(
-                    "§aSend the coordinates in chat: X Y Z Yaw Pitch"
+                    "§7§l[§b§lO§3§lJ§7§l] §aSend the coordinates in chat: X Y Z Yaw Pitch"
             );
 
         } else if (item.getType() == Material.WRITABLE_BOOK) {
@@ -894,7 +894,7 @@ public class OneJump implements Listener {
             player.closeInventory();
 
             player.sendMessage(
-                    "§aSend the jump strategy in chat: "
+                    "§7§l[§b§lO§3§lJ§7§l] §aSend the jump strategy in chat: "
             );
 
         } else if (item.getType() == Material.RED_WOOL) {
@@ -913,7 +913,7 @@ public class OneJump implements Listener {
 
             player.closeInventory();
 
-            player.sendMessage("§cCheckpoint deleted!");
+            player.sendMessage("§7§l[§b§lO§3§lJ§7§l] §cCheckpoint deleted!");
 
             saveData();
         }
@@ -1003,7 +1003,7 @@ public class OneJump implements Listener {
 
                 player.sendMessage(
                         String.format(
-                                "§aJump %s §fcompleted!",
+                                "§7§l[§b§lO§3§lJ§7§l] §aJump %s §fcompleted!",
                                 String.valueOf(jumpNo)
                         )
                 );

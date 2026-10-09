@@ -68,12 +68,12 @@ public class ChatPrefixes implements Listener {
                 onejump.jumpLocations.clear();
                 onejump.completed.clear();
                 onejump.jump = 1;
-                player.sendMessage("§aSuccessfully deleted all jumps!");
+                player.sendMessage("[§b§lO§3§lJ§7§l] §aSuccessfully deleted all jumps!");
             } else {
                 plugin.nukeConf.remove(player.getUniqueId());
                 if (player.isOnline()) {
 
-                    player.sendMessage("§aNuke cancelled. Try again!");
+                    player.sendMessage("[§b§lO§3§lJ§7§l] §cNuke cancelled. Try again!");
                 }
             }
         }
@@ -88,7 +88,7 @@ public class ChatPrefixes implements Listener {
             String[] args = message.split(" ");
 
             if (args.length != 5) {
-                player.sendMessage("§cInvalid arguments! Usage: <X> <Y> <Z> <Yaw> <Pitch>");
+                player.sendMessage("§8§l[§c§l!§8§l] §cInvalid arguments! Usage: <X> <Y> <Z> <Yaw> <Pitch>");
                 return;
             }
 
@@ -104,13 +104,13 @@ public class ChatPrefixes implements Listener {
 
             if (checkpoint == null) {
                 onejump.waitingForStrategy.remove(player);
-                player.sendMessage("§cCheckpoint not found.");
+                player.sendMessage("§8§l[§c§l!§8§l] §cCheckpoint not found.");
                 return;
             }
 
             onejump.checkpoints.put(checkpoint, location);
 
-            player.sendMessage("Successfully set checkpoint coordinates!");
+            player.sendMessage("[§b§lO§3§lJ§7§l] §aSuccessfully set checkpoint coordinates!");
 
             onejump.waitingForCoordinates.remove(player);
             onejump.editingCheckpoint.remove(player);
@@ -128,7 +128,7 @@ public class ChatPrefixes implements Listener {
             onejump.waitingForStrategy.remove(player);
             onejump.editingCheckpoint.remove(player);
 
-            player.sendMessage("§aSuccessfully set the jump strategy!");
+            player.sendMessage("[§b§lO§3§lJ§7§l] §aSuccessfully set the jump strategy!");
         }
 
 
