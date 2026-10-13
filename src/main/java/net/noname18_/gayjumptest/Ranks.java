@@ -214,7 +214,7 @@ public class Ranks implements Listener {
 
         player.sendPlayerListHeaderAndFooter(
                 header,
-                Component.text("\n§dgayjump.aternos.me")
+                Component.text("\n§denter your ip here")
         );
     }
 }

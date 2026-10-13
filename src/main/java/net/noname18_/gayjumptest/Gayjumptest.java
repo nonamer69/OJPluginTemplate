@@ -9,10 +9,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.inventory.view.AnvilView;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -36,6 +39,12 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
     Map<Player, Integer> durationIndexes = new HashMap<>();
 
     Map<Player, ArrayList<OfflinePlayer>> punishmentData = new HashMap<>();
+
+    Map<Player, String> punishmentType = new HashMap<>();
+
+    Map<Player, String> reasons = new HashMap<>();
+
+    Map<Player, String> durations = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -130,6 +139,8 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 return false;
             }
 
+            punishmentType.put(player, "mute");
+
             Inventory mutemenu = Bukkit.createInventory(player, 45, "Mute " + target.getName());
 
             ItemStack borderPane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
@@ -148,6 +159,20 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                     mutemenu.setItem(slot, borderPane);
                 }
             }
+
+            ItemStack cancel = new ItemStack(Material.BARRIER);
+            ItemMeta cancelMeta = cancel.getItemMeta();
+            cancelMeta.setDisplayName("§cCancel");
+            cancelMeta.setLore(List.of("§7Click to close this gui"));
+            cancel.setItemMeta(cancelMeta);
+            mutemenu.setItem(40, cancel);
+
+            ItemStack custom = new ItemStack(Material.MAP);
+            ItemMeta customMeta = custom.getItemMeta();
+            customMeta.setDisplayName("§cCustom punishment");
+            customMeta.setLore(List.of("§7Click to set a custom punishment"));
+            custom.setItemMeta(customMeta);
+            mutemenu.setItem(4, custom);
 
             String[] reasons = {
                     "Spamming",
@@ -260,6 +285,8 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 return false;
             }
 
+            punishmentType.put(player, "ban");
+
             Inventory banmenu = Bukkit.createInventory(player, 45, "Ban " + target.getName());
 
             ItemStack borderPane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
@@ -330,6 +357,20 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                 item.setItemMeta(itemMeta);
                 banmenu.setItem(slots[i], item);
             }
+
+            ItemStack cancel = new ItemStack(Material.BARRIER);
+            ItemMeta cancelMeta = cancel.getItemMeta();
+            cancelMeta.setDisplayName("§cCancel");
+            cancelMeta.setLore(List.of("§7Click to close this gui"));
+            cancel.setItemMeta(cancelMeta);
+            banmenu.setItem(40, cancel);
+
+            ItemStack custom = new ItemStack(Material.MAP);
+            ItemMeta customMeta = custom.getItemMeta();
+            customMeta.setDisplayName("§cCustom punishment");
+            customMeta.setLore(List.of("§7Click to set a custom punishment"));
+            custom.setItemMeta(customMeta);
+            banmenu.setItem(4, custom);
 
             targetPlyr = target;
             player.openInventory(banmenu);
@@ -753,6 +794,10 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
             Player player = (Player) event.getWhoClicked();
             int slot = event.getRawSlot();
 
+            if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.BARRIER) {
+                event.getView().close();
+            }
+
             String[] reasons = {
                     "Spamming",
                     "Inappropriate Behavior",
@@ -841,17 +886,18 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                     }
 
                     if (event.getClick().isLeftClick()) {
-
                         int index = durationIndexes.getOrDefault(player, 0);
                         String duration = durations[index];
 
                         if (event.getView().getTitle().contains("Mute")) {
-
                             punishments.mute(
                                     target,
                                     duration,
                                     reasons[i]
                             );
+
+                            punishmentType.remove(player);
+
                             event.getView().close();
                         } else if (event.getView().getTitle().contains("Ban")) {
                             String message = (
@@ -869,15 +915,317 @@ public final class Gayjumptest extends JavaPlugin implements Listener {
                                     banReasons[i],
                                     message
                             );
+
+                            punishmentType.remove(player);
                             event.getView().close();
                             return;
                         }
 
-                        break;
                     }
                 }
             }
         }
+        if (event.getClick().isLeftClick()) {
+            Player player = (Player) event.getWhoClicked();
+            if (event.getView().getTitle().contains("Mute") || event.getView().getTitle().contains("Ban")) {
+                if (event.getCurrentItem() != null && event.getRawSlot() < event.getView().getTopInventory().getSize() && event.getCurrentItem().getType() == Material.MAP) {
+
+                    Inventory customPunishment = Bukkit.createInventory(player, 27, "Custom Punishment");
+
+                    ItemStack borderPane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+
+                    ItemMeta meta = borderPane.getItemMeta();
+                    meta.setDisplayName(" ");
+                    borderPane.setItemMeta(meta);
+
+                    for (int customSlot = 0; customSlot < 27; customSlot++) {
+                        int row = customSlot / 9;
+                        int column = customSlot % 9;
+
+                        if (row == 0 || row == 2 || column == 0 || column == 8) {
+                            customPunishment.setItem(customSlot, borderPane);
+                        }
+                    }
+
+                    ItemStack back = new ItemStack(Material.BARRIER);
+                    ItemMeta cancelMeta = back.getItemMeta();
+                    cancelMeta.setDisplayName("§cCancel");
+                    back.setItemMeta(cancelMeta);
+                    customPunishment.setItem(18, back);
+
+                    String duration = durations.get(player);
+
+                    if (duration == null) {
+                        duration = " ";
+                    }
+
+                    String reason = reasons.get(player);
+
+                    if (reason == null) {
+                        reason = " ";
+                    }
+
+                    ItemStack customR = new ItemStack(Material.WRITABLE_BOOK);
+                    ItemMeta customRmeta = customR.getItemMeta();
+                    customRmeta.setDisplayName("§cSet reason");
+                    customRmeta.setLore(List.of("§7Click to set a custom reason", "", "§7Current reason: §c" + reason));
+                    customR.setItemMeta(customRmeta);
+                    customPunishment.setItem(12, customR);
+
+                    ItemStack customD = new ItemStack(Material.CLOCK);
+                    ItemMeta customDmeta = customD.getItemMeta();
+                    customDmeta.setDisplayName("§cSet duration");
+                    customDmeta.setLore(List.of("§7Click to set a custom duration", "", "§7Please make sure it ends in '§cseconds§7', '§cminutes§7', '§chours§7', etc", "", "§7Current duration: §c" + duration));
+                    customD.setItemMeta(customDmeta);
+                    customPunishment.setItem(14, customD);
+
+                    ItemStack confirm = new ItemStack(Material.EMERALD);
+                    ItemMeta confirmMeta = confirm.getItemMeta();
+                    confirmMeta.setDisplayName("§aPunish");
+                    confirmMeta.setLore(List.of("§7Click to punish the target player"));
+                    confirm.setItemMeta(confirmMeta);
+                    customPunishment.setItem(22, confirm);
+                    player.openInventory(customPunishment);
+                }
+            }
+            if (event.getView().getTitle().contains("Custom Punishment")) {
+                if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.BARRIER) {
+                    event.setCancelled(true);
+                    event.getView().close();
+                } else if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.WRITABLE_BOOK) {
+
+                    event.setCancelled(true);
+                    InventoryView view = player.openAnvil(null, true);
+
+                    if (view == null) {
+                        return;
+                    }
+
+                    view.setTitle("Set custom reason");
+
+                    if (view instanceof AnvilView anvilView) {
+                        if (event.getRawSlot() == 0 || event.getRawSlot() == 1) {
+                            event.setCancelled(true);
+                            return;
+                        }
+
+                        ItemStack paper = new ItemStack(Material.PAPER);
+                        ItemMeta paperMeta = paper.getItemMeta();
+                        paperMeta.setDisplayName("Enter custom reason here");
+                        paper.setItemMeta(paperMeta);
+
+                        anvilView.getTopInventory().setItem(0, paper);
+                        anvilView.setRepairCost(0);
+                    }
+                } else if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.CLOCK) {
+
+                    event.setCancelled(true);
+                    InventoryView view = player.openAnvil(null, true);
+
+                    if (view == null) {
+                        return;
+                    }
+
+                    view.setTitle("Set custom duration");
+
+                    if (view instanceof AnvilView anvilView) {
+                        ItemStack paper = new ItemStack(Material.PAPER);
+                        ItemMeta paperMeta = paper.getItemMeta();
+                        paperMeta.setDisplayName("Enter custom duration here");
+                        paper.setItemMeta(paperMeta);
+
+                        anvilView.getTopInventory().setItem(0, paper);
+                        anvilView.setRepairCost(0);
+                    }
+                } else if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.EMERALD) {
+                    event.setCancelled(true);
+                    String reason = reasons.get(player);
+
+                    if (reason == null) {
+                        event.getView().close();
+                        return;
+                    }
+
+                    String duration = durations.get(player);
+
+                    if (duration == null) {
+                        event.getView().close();
+                        return;
+                    }
+
+                    String message = (
+                            "§8§l[§c§lPUNISHMENTS§8§l]\n\n" +
+                                    "§cYou are §4banned§c!\n\n" +
+                                    "§cReason: §4" + reason +
+                                    "\n§cTime left: §4" + punishments.formatDurations(
+                                    punishments.parseDuration(duration)
+                            )
+                    );
+
+                    if (punishmentType.get(player).equals("mute")) {
+                        punishments.mute(targetPlyr, duration, reason);
+                    } else if (punishmentType.get(player).equals("ban")) {
+                        punishments.ban(targetPlyr, duration, reason, message);
+                    }
+
+
+                    reasons.remove(player);
+                    durations.remove(player);
+                    punishmentType.remove(player);
+                    event.getView().close();
+                    return;
+                } else {
+                    event.setCancelled(true);
+                }
+            }
+
+            if (event.getView() instanceof AnvilView anvilView && event.getView().getTitle().equals("Set custom reason") && event.getRawSlot() == 2) {
+                event.setCancelled(true);
+
+                String reason = anvilView.getRenameText();
+
+                if (reason == null || reason.isBlank()) {
+                    player.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cPlease enter a valid string!");
+                    return;
+                }
+
+                event.setCancelled(true);
+
+                player.closeInventory();
+
+                player.getInventory().remove(Material.PAPER);
+
+                reasons.put(player, reason);
+
+                Inventory customPunishment = Bukkit.createInventory(player, 27, "Custom Punishment");
+
+                ItemStack borderPane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+
+                ItemMeta meta = borderPane.getItemMeta();
+                meta.setDisplayName(" ");
+                borderPane.setItemMeta(meta);
+
+                for (int customSlot = 0; customSlot < 27; customSlot++) {
+                    int row = customSlot / 9;
+                    int column = customSlot % 9;
+
+                    if (row == 0 || row == 2 || column == 0 || column == 8) {
+                        customPunishment.setItem(customSlot, borderPane);
+                    }
+                }
+
+                ItemStack back = new ItemStack(Material.BARRIER);
+                ItemMeta cancelMeta = back.getItemMeta();
+                cancelMeta.setDisplayName("§cCancel");
+                back.setItemMeta(cancelMeta);
+                customPunishment.setItem(18, back);
+
+                ItemStack customR = new ItemStack(Material.WRITABLE_BOOK);
+                ItemMeta customRmeta = customR.getItemMeta();
+                customRmeta.setDisplayName("§cSet reason");
+                customRmeta.setLore(List.of("§7Click to set a custom reason", "", "§7Current reason: §c" + reason));
+                customR.setItemMeta(customRmeta);
+                customPunishment.setItem(12, customR);
+
+                String duration = durations.get(player);
+
+                if (durations.isEmpty()) {
+                    duration = "";
+                }
+
+                ItemStack customD = new ItemStack(Material.CLOCK);
+                ItemMeta customDmeta = customD.getItemMeta();
+                customDmeta.setDisplayName("§cSet duration");
+                customDmeta.setLore(List.of("§7Click to set a custom duration", "", "§7Please make sure it ends in '§cseconds§7', '§cminutes§7', '§chours§7', etc", "", "§7Current duration: §c" + duration));
+                customD.setItemMeta(customDmeta);
+                customPunishment.setItem(14, customD);
+
+                ItemStack confirm = new ItemStack(Material.EMERALD);
+                ItemMeta confirmMeta = confirm.getItemMeta();
+                confirmMeta.setDisplayName("§aPunish");
+                confirmMeta.setLore(List.of("§7Click to punish the target player"));
+                confirm.setItemMeta(confirmMeta);
+                customPunishment.setItem(22, confirm);
+                player.openInventory(customPunishment);
+            }
+
+            if (event.getView() instanceof AnvilView anvilView && event.getView().getTitle().equals("Set custom duration") && event.getRawSlot() == 2) {
+
+                if (event.getRawSlot() == 0 || event.getRawSlot() == 1) {
+                    event.setCancelled(true);
+                    return;
+                }
+
+                if (!(event.getRawSlot() == 2)) {
+                    return;
+                }
+
+                String duration = anvilView.getRenameText();
+
+                if (duration == null) {
+                    player.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] §cPlease enter a valid string!");
+                    return;
+                }
+
+                if (!(punishments.parseDuration(duration) >= 0)) {
+                    player.sendMessage("§8§l[§c§lPUNISHMENTS§8§l] Enter a valid duration! Example: 1 seconds, 1 minutes, 1 hours, etc.");
+                    return;
+                }
+
+                player.closeInventory();
+
+                player.getInventory().remove(Material.PAPER);
+
+                durations.put(player, duration);
+
+                Inventory customPunishment = Bukkit.createInventory(player, 27, "Custom Punishment");
+
+                ItemStack borderPane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+
+                ItemMeta meta = borderPane.getItemMeta();
+                meta.setDisplayName(" ");
+                borderPane.setItemMeta(meta);
+
+                for (int customSlot = 0; customSlot < 27; customSlot++) {
+                    int row = customSlot / 9;
+                    int column = customSlot % 9;
+
+                    if (row == 0 || row == 2 || column == 0 || column == 8) {
+                        customPunishment.setItem(customSlot, borderPane);
+                    }
+                }
+
+                ItemStack back = new ItemStack(Material.BARRIER);
+                ItemMeta cancelMeta = back.getItemMeta();
+                cancelMeta.setDisplayName("§cCancel");
+                back.setItemMeta(cancelMeta);
+                customPunishment.setItem(18, back);
+
+                ItemStack customR = new ItemStack(Material.WRITABLE_BOOK);
+                ItemMeta customRmeta = customR.getItemMeta();
+                customRmeta.setDisplayName("§cSet reason");
+                customRmeta.setLore(List.of("§7Click to set a custom reason", "", "§7Current reason: §c" + reasons.get(player)));
+                customR.setItemMeta(customRmeta);
+                customPunishment.setItem(12, customR);
+
+                ItemStack customD = new ItemStack(Material.CLOCK);
+                ItemMeta customDmeta = customD.getItemMeta();
+                customDmeta.setDisplayName("§cSet duration");
+                customDmeta.setLore(List.of("§7Click to set a custom duration", "", "§7Please make sure it ends in '§cseconds§7', '§cminutes§7', '§chours§7', etc", "", "§7Current duration: §c" + duration));
+                customD.setItemMeta(customDmeta);
+                customPunishment.setItem(14, customD);
+
+                ItemStack confirm = new ItemStack(Material.EMERALD);
+                ItemMeta confirmMeta = confirm.getItemMeta();
+                confirmMeta.setDisplayName("§aPunish");
+                confirmMeta.setLore(List.of("§7Click to punish the target player"));
+                confirm.setItemMeta(confirmMeta);
+                customPunishment.setItem(22, confirm);
+                player.openInventory(customPunishment);
+            }
+
+        }
+
     }
 
     @Override

@@ -83,7 +83,6 @@ public class ChatPrefixes implements Listener {
 
             String message = PlainTextComponentSerializer.plainText()
                     .serialize(event.message());
-            player.sendMessage("§aReceived: " + message);
 
             String[] args = message.split(" ");
 
